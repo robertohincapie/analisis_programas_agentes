@@ -1,0 +1,532 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Gestor de programas</title>
+  <style>
+    :root { --gap: 14px; }
+    body { font-family: system-ui, Arial; margin: 0; }
+    header { padding: 12px 16px; border-bottom: 1px solid #ddd; }
+    .wrap { display: grid; grid-template-columns: 1.35fr 0.65fr; gap: var(--gap); padding: 14px 16px; }
+    .panel { border: 1px solid #ddd; border-radius: 10px; overflow: hidden; background: #fff; min-height: calc(100vh - 106px); display: flex; flex-direction: column; }
+    .panel h3 { margin: 0; padding: 12px 12px; border-bottom: 1px solid #eee; font-size: 16px; }
+    .panel .body { padding: 12px; display: flex; flex-direction: column; gap: 10px; }
+    .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    label { display: block; font-size: 12px; opacity: .8; margin-bottom: 4px; }
+    input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 10px; }
+    .meta { font-size: 13px; opacity: .85; }
+    .list { border-top: 1px solid #eee; overflow: auto; }
+    .row { display: grid; grid-template-columns: 32px 1fr; gap: 10px; padding: 10px 12px; border-bottom: 1px solid #f0f0f0; align-items: start; }
+    .btn {
+      width: 32px; height: 32px;
+      border: 1px solid #ccc; background: #fff; border-radius: 10px;
+      cursor: pointer; font-size: 18px; line-height: 1;
+    }
+    .btn:disabled { opacity: .4; cursor: not-allowed; }
+    .btn:active { transform: translateY(1px); }
+    .title { font-weight: 650; margin-bottom: 2px; }
+    .sub { font-size: 12px; opacity: .8; }
+    .sticky { position: sticky; top: 0; background: #fff; z-index: 5; }
+    .toolbar { padding: 10px 12px; border-top: 1px solid #eee; display: flex; gap: 10px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
+    .smallbtn { padding: 8px 10px; border-radius: 10px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+    .pill { font-size: 12px; padding: 4px 8px; border: 1px solid #ddd; border-radius: 999px; opacity: .85; }
+    .actions { display:flex; gap:10px; align-items:center; flex-wrap: wrap; }
+    .hint { font-size: 12px; opacity: .7; }
+    .warn { font-size: 12px; opacity: .9; }
+    @media (max-width: 980px) {
+      .wrap { grid-template-columns: 1fr; }
+      .panel { min-height: auto; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex; gap:12px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap;">
+    <div>
+      <div style="font-weight:700;">Gestor de programas</div>
+      <div class="meta" id="status">Cargando datos...</div>
+      <div class="hint" id="hintLine">Se cargará/guardará selección en el proyecto (seleccion.json) si existe base.</div>
+      <div class="warn" id="saveMsg" style="display:none;"></div>
+    </div>
+
+    <div class="actions">
+      <div class="pill" id="counts">Activos: 0</div>
+      <button class="smallbtn" id="saveSel">Guardar selección en el proyecto</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Panel izquierdo -->
+  <div class="panel">
+    <h3 class="sticky">Seleccionar programas</h3>
+
+    <div class="body sticky" style="border-bottom:1px solid #eee;">
+      <div class="grid">
+        <div>
+          <label for="qProg">Nombre del programa (AND de palabras)</label>
+          <input id="qProg" type="text" placeholder="Ej: nano material" autocomplete="off" />
+        </div>
+        <div>
+          <label for="nivelSel">Nivel de formación</label>
+          <select id="nivelSel">
+            <option value="">(Todos)</option>
+          </select>
+        </div>
+
+        <div>
+          <label for="qInst">Institución (AND de palabras)</label>
+          <input id="qInst" type="text" placeholder="Ej: nacional colombia" autocomplete="off" />
+        </div>
+        <div>
+          <label for="qMun">Ciudad/Municipio (AND de palabras)</label>
+          <input id="qMun" type="text" placeholder="Ej: bogota" autocomplete="off" />
+        </div>
+
+        <div style="grid-column:1 / -1;">
+          <label for="qDep">Departamento (AND de palabras)</label>
+          <input id="qDep" type="text" placeholder="Ej: antioquia" autocomplete="off" />
+        </div>
+      </div>
+
+      <div class="meta" id="leftMeta">
+        Cada palabra debe aparecer en el campo correspondiente. (Sin tildes, minúsculas)
+      </div>
+    </div>
+
+    <div class="list" id="results"></div>
+
+    <div class="toolbar">
+      <div class="meta" id="leftFooter">Coincidencias: 0</div>
+      <button class="smallbtn" id="clearFilters">Limpiar filtros</button>
+    </div>
+  </div>
+
+  <!-- Panel derecho -->
+  <div class="panel">
+    <h3 class="sticky">Activos</h3>
+    <div class="body sticky" style="border-bottom:1px solid #eee;">
+      <div class="meta">Programas seleccionados para analizar.</div>
+    </div>
+
+    <div class="list" id="activeList"></div>
+
+    <div class="toolbar">
+      <div class="meta" id="activeFooter">Activos: 0</div>
+      <button class="smallbtn" id="clearActive">Vaciar activos</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Datos compartidos
+  const DATA_URL = "/static/data/programas.json";
+
+  // Base del proyecto (viene desde shell.html: ...programas.html?base=/proy1)
+  const params = new URLSearchParams(location.search);
+  const BASE = params.get("base") || ""; // "/proy1"
+  const SELECCION_URL = BASE ? `${BASE}/api/seleccion` : "";
+
+  // Respaldo opcional local (si no hay seleccion.json todavía)
+  const STORAGE_KEY = "gestor_programas_activos_v1";
+
+  // Valores a excluir si aparecen en cualquier campo del registro
+  const BAD_VALUES = new Set(["informacion", "nan"]);
+
+  function normalizeText(s) {
+    if (s == null) return "";
+    return String(s)
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+  }
+  function tokenizeInput(query) {
+    const q = normalizeText(query);
+    if (!q) return [];
+    return q.split(" ").filter(Boolean);
+  }
+  function matchAllTokens(text, tokens) {
+    if (tokens.length === 0) return true;
+    for (const t of tokens) if (!text.includes(t)) return false;
+    return true;
+  }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (m) => ({
+      "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"
+    }[m]));
+  }
+  function shouldExcludeRecord(rec) {
+    for (const v of Object.values(rec)) {
+      const nv = normalizeText(v);
+      if (BAD_VALUES.has(nv)) return true;
+    }
+    return false;
+  }
+
+  let data = [];
+  let idx = [];
+  let byCode = new Map();
+  let activeMap = new Map();
+  let debounceTimer = null;
+
+  const statusEl = document.getElementById("status");
+  const hintLineEl = document.getElementById("hintLine");
+  const saveMsgEl = document.getElementById("saveMsg");
+  const countsEl = document.getElementById("counts");
+
+  const qProgEl = document.getElementById("qProg");
+  const qInstEl = document.getElementById("qInst");
+  const qMunEl  = document.getElementById("qMun");
+  const qDepEl  = document.getElementById("qDep");
+  const nivelSelEl = document.getElementById("nivelSel");
+
+  const resultsEl = document.getElementById("results");
+  const leftFooterEl = document.getElementById("leftFooter");
+
+  const activeListEl = document.getElementById("activeList");
+  const activeFooterEl = document.getElementById("activeFooter");
+
+  const clearFiltersBtn = document.getElementById("clearFilters");
+  const clearActiveBtn  = document.getElementById("clearActive");
+
+  const saveSelBtn = document.getElementById("saveSel");
+
+  const MAX_ROWS_LEFT = 400;
+  const MAX_ROWS_RIGHT = 600;
+
+  // ----- localStorage fallback -----
+  function saveActivesToStorage() {
+    try {
+      const codes = Array.from(activeMap.keys());
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ codes }));
+    } catch {}
+  }
+  function loadActivesFromStorage() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return [];
+      const obj = JSON.parse(raw);
+      return Array.isArray(obj.codes) ? obj.codes.map(String) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  function hydrateActivesFromCodes(codes) {
+    activeMap.clear();
+    for (const c of codes) {
+      const code = String(c);
+      const r = byCode.get(code);
+      if (r) activeMap.set(code, r);
+    }
+    renderActive();
+    applyFilters();
+    saveActivesToStorage();
+  }
+
+  function renderResults(rows) {
+    resultsEl.innerHTML = "";
+    const frag = document.createDocumentFragment();
+
+    for (const r of rows.slice(0, MAX_ROWS_LEFT)) {
+      const code = String(r.CODIGO_SNIES ?? "");
+      const already = activeMap.has(code);
+
+      const div = document.createElement("div");
+      div.className = "row";
+      div.innerHTML = `
+        <button class="btn" title="${already ? "Ya está activo" : "Agregar a activos"}" ${already ? "disabled" : ""}>+</button>
+        <div>
+          <div class="title">${escapeHtml(r.PROGRAMA_ACADEMICO ?? "")}</div>
+          <div class="sub">
+            ${escapeHtml(r.INSTITUCION ?? "")} · ${escapeHtml(r.NIVEL_FORMACION ?? "")}<br>
+            ${escapeHtml(r.MUNICIPIO_PROGRAMA ?? "")} · ${escapeHtml(r.DEPARTAMENTO_PROGRAMA ?? "")} · SNIES: ${escapeHtml(code)}
+          </div>
+        </div>
+      `;
+      const btn = div.querySelector("button");
+      if (!already) {
+        btn.addEventListener("click", () => {
+          addActive(r);
+          applyFilters();
+        });
+      }
+      frag.appendChild(div);
+    }
+
+    resultsEl.appendChild(frag);
+  }
+
+  function renderActive() {
+    activeListEl.innerHTML = "";
+    const frag = document.createDocumentFragment();
+    const actives = Array.from(activeMap.values());
+
+    for (const r of actives.slice(0, MAX_ROWS_RIGHT)) {
+      const code = String(r.CODIGO_SNIES ?? "");
+      const div = document.createElement("div");
+      div.className = "row";
+      div.innerHTML = `
+        <button class="btn" title="Quitar de activos">×</button>
+        <div>
+          <div class="title">${escapeHtml(r.PROGRAMA_ACADEMICO ?? "")}</div>
+          <div class="sub">
+            ${escapeHtml(r.INSTITUCION ?? "")} · ${escapeHtml(r.NIVEL_FORMACION ?? "")}<br>
+            ${escapeHtml(r.MUNICIPIO_PROGRAMA ?? "")} · ${escapeHtml(r.DEPARTAMENTO_PROGRAMA ?? "")} · SNIES: ${escapeHtml(code)}
+          </div>
+        </div>
+      `;
+      div.querySelector("button").addEventListener("click", () => {
+        activeMap.delete(code);
+        renderActive();
+        applyFilters();
+        saveActivesToStorage();
+      });
+
+      frag.appendChild(div);
+    }
+
+    activeListEl.appendChild(frag);
+
+    const n = activeMap.size;
+    activeFooterEl.textContent = `Activos: ${n}`;
+    countsEl.textContent = `Activos: ${n}`;
+  }
+
+  function addActive(r) {
+    const code = String(r.CODIGO_SNIES ?? "");
+    if (!code) return;
+    activeMap.set(code, r);
+    renderActive();
+    saveActivesToStorage();
+  }
+
+  function applyFilters() {
+    if (idx.length === 0) return;
+
+    const t0 = performance.now();
+
+    const tProg = tokenizeInput(qProgEl.value);
+    const tInst = tokenizeInput(qInstEl.value);
+    const tMun  = tokenizeInput(qMunEl.value);
+    const tDep  = tokenizeInput(qDepEl.value);
+    const nivel = normalizeText(nivelSelEl.value);
+
+    const matches = [];
+    for (let i = 0; i < idx.length; i++) {
+      const r = idx[i];
+      if (nivel && r._nivel !== nivel) continue;
+      if (!matchAllTokens(r._prog, tProg)) continue;
+      if (!matchAllTokens(r._inst, tInst)) continue;
+      if (!matchAllTokens(r._mun,  tMun))  continue;
+      if (!matchAllTokens(r._dep,  tDep))  continue;
+      matches.push(data[i]);
+    }
+
+    const t1 = performance.now();
+    renderResults(matches);
+
+    leftFooterEl.textContent =
+      `Coincidencias: ${matches.length} | Mostrando: ${Math.min(matches.length, MAX_ROWS_LEFT)} | Tiempo: ${(t1 - t0).toFixed(1)} ms`;
+  }
+
+  function scheduleFilter() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(applyFilters, 120);
+  }
+
+  function populateNivelSelect() {
+    const set = new Set();
+    for (const r of idx) if (r._nivel) set.add(r._nivel);
+    const niveles = Array.from(set).sort((a,b) => a.localeCompare(b, "es"));
+
+    while (nivelSelEl.options.length > 1) nivelSelEl.remove(1);
+    for (const n of niveles) {
+      const opt = document.createElement("option");
+      opt.value = n;
+      opt.textContent = n;
+      nivelSelEl.appendChild(opt);
+    }
+  }
+
+  // ---- selección desde servidor ----
+  function parseSelectionToCodes(obj) {
+    // Soporta:
+    // - { codes: [...] }
+    // - { items: [...] }
+    // - array directo [{CODIGO_SNIES: ...}, ...]
+    if (Array.isArray(obj)) {
+      return obj.map(x => String(x.CODIGO_SNIES ?? "")).filter(Boolean);
+    }
+    if (obj && Array.isArray(obj.codes)) return obj.codes.map(String);
+    if (obj && Array.isArray(obj.items)) return obj.items.map(x => String(x.CODIGO_SNIES ?? "")).filter(Boolean);
+    if (obj && Array.isArray(obj.selected)) return obj.selected.map(String);
+    return [];
+  }
+
+  async function loadSelectionFromServerIfExists() {
+    if (!SELECCION_URL) return { loaded: false, reason: "no_base" };
+
+    try {
+      statusEl.textContent = "Buscando selección previa (seleccion.json)...";
+      const resp = await fetch(SELECCION_URL, { cache: "no-store" });
+
+      if (resp.status === 404) {
+        statusEl.textContent = "Sin selección previa en el proyecto (seleccion.json no existe).";
+        return { loaded: false, reason: "not_found" };
+      }
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+
+      const obj = await resp.json();
+      const codes = parseSelectionToCodes(obj);
+      hydrateActivesFromCodes(codes);
+
+      statusEl.textContent = `Selección previa cargada desde el proyecto. Activos: ${activeMap.size}`;
+      return { loaded: true, reason: "ok" };
+    } catch (e) {
+      console.warn("No se pudo cargar seleccion.json del proyecto:", e);
+      statusEl.textContent = "No se pudo cargar la selección previa (revisa consola).";
+      return { loaded: false, reason: "error" };
+    }
+  }
+
+  // ---- Guardar selección al servidor ----
+  function buildSelectionPayload() {
+    return {
+      updated_at: new Date().toISOString(),
+      count: activeMap.size,
+      codes: Array.from(activeMap.keys()),
+      items: Array.from(activeMap.values()), // opcional (más pesado)
+    };
+  }
+
+  function showSaveMsg(text, isError=false) {
+    saveMsgEl.style.display = "block";
+    saveMsgEl.textContent = text;
+    saveMsgEl.style.color = isError ? "#b00020" : "#0b6b0b";
+    setTimeout(() => { saveMsgEl.style.display = "none"; }, 4000);
+  }
+
+  async function saveSelectionToServer() {
+    if (!SELECCION_URL) {
+      showSaveMsg("No se recibió base del proyecto. No se puede guardar.", true);
+      return;
+    }
+
+    const payload = buildSelectionPayload();
+    saveSelBtn.disabled = true;
+    saveSelBtn.textContent = "Guardando...";
+
+    try {
+      const resp = await fetch(SELECCION_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!resp.ok) {
+        const t = await resp.text().catch(() => "");
+        throw new Error(`HTTP ${resp.status} ${t}`);
+      }
+
+      showSaveMsg("Selección guardada en seleccion.json (proyecto).");
+    } catch (e) {
+      console.error("Error guardando selección:", e);
+      showSaveMsg("No se pudo guardar en el proyecto. Revisa consola y el endpoint PUT.", true);
+    } finally {
+      saveSelBtn.disabled = false;
+      saveSelBtn.textContent = "Guardar selección en el proyecto";
+    }
+  }
+
+  // ---- Eventos UI ----
+  qProgEl.addEventListener("input", scheduleFilter);
+  qInstEl.addEventListener("input", scheduleFilter);
+  qMunEl.addEventListener("input", scheduleFilter);
+  qDepEl.addEventListener("input", scheduleFilter);
+  nivelSelEl.addEventListener("change", applyFilters);
+
+  clearFiltersBtn.addEventListener("click", () => {
+    qProgEl.value = "";
+    qInstEl.value = "";
+    qMunEl.value  = "";
+    qDepEl.value  = "";
+    nivelSelEl.value = "";
+    applyFilters();
+  });
+
+  clearActiveBtn.addEventListener("click", () => {
+    activeMap.clear();
+    renderActive();
+    applyFilters();
+    saveActivesToStorage();
+  });
+
+  saveSelBtn.addEventListener("click", saveSelectionToServer);
+
+  // ---- Cargar datos base ----
+  async function loadData() {
+    try {
+      statusEl.textContent = "Descargando programas...";
+      const resp = await fetch(DATA_URL, { cache: "force-cache" });
+      if (!resp.ok) throw new Error("HTTP " + resp.status);
+
+      const json = await resp.json();
+
+      statusEl.textContent = "Filtrando registros inválidos...";
+      data = json.filter(r => !shouldExcludeRecord(r));
+
+      byCode.clear();
+      for (const r of data) {
+        const code = String(r.CODIGO_SNIES ?? "");
+        if (code) byCode.set(code, r);
+      }
+
+      statusEl.textContent = "Preparando índices...";
+      idx = data.map(r => ({
+        _prog:  normalizeText(r.PROGRAMA_ACADEMICO ?? ""),
+        _inst:  normalizeText(r.INSTITUCION ?? ""),
+        _nivel: normalizeText(r.NIVEL_FORMACION ?? ""),
+        _mun:   normalizeText(r.MUNICIPIO_PROGRAMA ?? ""),
+        _dep:   normalizeText(r.DEPARTAMENTO_PROGRAMA ?? ""),
+      }));
+
+      populateNivelSelect();
+
+      // 1) carga selección del servidor si existe
+      const fromServer = await loadSelectionFromServerIfExists();
+
+      // 2) si no existe en servidor, usa fallback local
+      if (!fromServer.loaded) {
+        const storedCodes = loadActivesFromStorage();
+        if (storedCodes.length) {
+          hydrateActivesFromCodes(storedCodes);
+          statusEl.textContent = `Selección cargada desde el navegador (fallback). Activos: ${activeMap.size}`;
+        } else if (fromServer.reason === "not_found") {
+          statusEl.textContent = `Listo. Registros: ${data.length}. Sin selección previa.`;
+        }
+      }
+
+      applyFilters();
+    } catch (e) {
+      console.error(e);
+      statusEl.textContent = "Error cargando datos (revisa consola).";
+    }
+  }
+
+  // Hint
+  if (!BASE) {
+    hintLineEl.textContent = "No se recibió base. Abre como .../programas.html?base=/tuProyecto";
+  } else {
+    hintLineEl.textContent = `Proyecto: ${BASE} · Selección: ${BASE}/api/seleccion`;
+  }
+
+  loadData();
+</script>
+
+</body>
+</html>

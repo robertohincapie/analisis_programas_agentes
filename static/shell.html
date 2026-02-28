@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Workflow UI</title>
+  <style>
+    :root {
+      --bg: #fafafa;
+      --card: #ffffff;
+      --border: #e7e7e7;
+      --text: #111;
+      --muted: #666;
+      --gap: 14px;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    header {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .hdr {
+      display:flex; align-items:center; justify-content:space-between; gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .brand { font-weight: 750; }
+    .hint { color: var(--muted); font-size: 13px; }
+
+    .wrap {
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr; /* izquierda / derecha */
+      gap: var(--gap);
+      min-height: calc(100vh - 60px);
+    }
+
+    .col {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      min-height: calc(100vh - 88px);
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: 0 1px 0 rgba(0,0,0,0.03);
+    }
+
+    .card h3 {
+      margin: 0;
+      padding: 12px 14px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+    }
+
+    .body { padding: 12px 14px; }
+
+    /* Izquierda: resumen arriba, chat abajo */
+    .summary {
+      flex: 0 0 auto;
+    }
+
+    .chat {
+      flex: 1 1 auto;
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;
+    }
+
+    .chat .body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      height: 100%;
+    }
+
+    .chatLog {
+      flex: 1 1 auto;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      overflow: auto;
+      background: #fff;
+      white-space: pre-wrap;
+      line-height: 1.35;
+      font-size: 14px;
+    }
+
+    .row { display: flex; gap: 10px; }
+    input[type="text"]{
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-size: 14px;
+      outline: none;
+    }
+    button {
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: #fff;
+      cursor: pointer;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+    button:active { transform: translateY(1px); }
+    .muted { color: var(--muted); font-size: 13px; }
+
+    /* Derecha: visor + navegación */
+    .rightTop {
+      display:flex; gap: 10px; align-items:center; justify-content:space-between;
+      flex-wrap: wrap;
+    }
+    .tabs { display:flex; gap: 8px; flex-wrap: wrap; }
+    .tabBtn[aria-current="true"] {
+      border-color: #bbb;
+      font-weight: 650;
+    }
+
+    .viewer {
+      height: calc(100vh - 140px);
+      min-height: 520px;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block;
+      background: #fff;
+    }
+
+    @media (max-width: 980px) {
+      .wrap { grid-template-columns: 1fr; }
+      .viewer { height: 70vh; min-height: 420px; }
+    }
+  </style>
+</head>
+
+<script>
+  const BASE = "{{BASE_URL}}";      // ej: "/dasfwefww"
+  const PROJECT_ID = "{{PROJECT_ID}}";
+</script>
+
+<body>
+
+<header>
+  <div class="hdr">
+    <div>
+      <div class="brand">Proceso asistido</div>
+      <div class="hint">Resumen + Agente (izquierda) · Páginas de soporte (derecha)</div>
+    </div>
+    <div class="hint" id="resumenStatus">Conectando…</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <!-- Columna izquierda -->
+  <div class="col">
+    <!-- Resumen -->
+    <div class="card summary">
+      <h3>Resumen del proceso</h3>
+      <div class="body">
+        <div style="font-weight:700;" id="resTitulo">Cargando…</div>
+        <ul id="resBullets" style="margin:10px 0 10px 18px; padding:0;"></ul>
+        <div class="muted" id="resEstado"></div>
+      </div>
+    </div>
+
+    <!-- Chat -->
+    <div class="card chat">
+      <h3>Agente conversacional</h3>
+      <div class="body">
+        <div class="chatLog" id="chatLog">Agente: Hola. ¿Qué quieres lograr hoy?</div>
+        <div class="row">
+          <input id="chatIn" type="text" placeholder="Escribe tu mensaje…" autocomplete="off" />
+          <button id="sendBtn">Enviar</button>
+        </div>
+        <div class="muted">Tip: Enter envía · Shift+Enter (si luego cambias a textarea) permite salto de línea.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Columna derecha -->
+  <div class="col">
+    <div class="card">
+      <h3>
+        <div class="rightTop">
+          <div>Páginas de soporte</div>
+          <div class="tabs">
+            <button class="tabBtn" id="tabProgramas" aria-current="true">Programas</button>
+            <button class="tabBtn" id="tabOtra" aria-current="false" disabled>Otra (próximo)</button>
+          </div>
+        </div>
+      </h3>
+      <div class="body viewer" style="padding:0;">
+        <iframe id="viewer"
+            src="/static/pages/programas.html?base={{BASE_URL}}"
+            title="Soporte">
+        </iframe>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  //const BASE = "{{BASE_URL}}"; // ya lo tienes
+
+  function escapeHtml(s) {
+    return String(s ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+async function actualizarResumen() {
+    console.log("Actualizando resumen...");
+    console.log("BASE URL:", BASE);
+
+  const tituloEl = document.getElementById("resTitulo");
+  const bulletsEl = document.getElementById("resBullets");
+  const estadoEl = document.getElementById("resEstado");
+  const statusHdr = document.getElementById("resumenStatus");
+
+  // Estado inicial mientras carga
+  tituloEl.textContent = "Cargando…";
+  bulletsEl.innerHTML = "";
+  estadoEl.textContent = "";
+  statusHdr.textContent = "Cargando estado…";
+
+  try {
+    const resp = await fetch(`${BASE}/api/estado`, { cache: "no-store" });
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+
+    const data = await resp.json();
+
+    const nombre = data.nombre ?? "—";
+    const nivel = data.nivel ?? "—";
+    const descripcion = data.descripcion ?? "";
+
+    tituloEl.innerHTML = `Programa: <span style="font-weight:800;">${escapeHtml(nombre)}</span>`;
+    bulletsEl.innerHTML = `
+      <li><strong>Nivel:</strong> ${escapeHtml(nivel)}</li>
+    `;
+    estadoEl.innerHTML = escapeHtml(descripcion).replaceAll("\n", "<br>");
+
+    statusHdr.textContent = "Conectado";
+  } catch (e) {
+    console.error("Error cargando estado:", e);
+    tituloEl.textContent = "No se pudo cargar el estado";
+    bulletsEl.innerHTML = "";
+    estadoEl.textContent = "";
+    statusHdr.textContent = "Error";
+  }
+}
+  // Inicial
+  actualizarResumen();
+  // (si quieres auto-refresh) setInterval(cargarResumen, 5000);
+// ✅ Esto hace que se ejecute al cargar la página
+window.addEventListener("DOMContentLoaded", () => {
+    console.log("Página cargada, inicializando...");
+    actualizarResumen();
+});
+</script>
+<script>
+  // --------- Chat ----------
+  const log = document.getElementById("chatLog");
+  const input = document.getElementById("chatIn");
+  const sendBtn = document.getElementById("sendBtn");
+
+  function appendLog(who, text) {
+    log.textContent += "\n\n" + who + ": " + text;
+    log.scrollTop = log.scrollHeight;
+  }
+
+  async function enviar() {
+    const text = input.value.trim();
+    if (!text) return;
+
+    appendLog("Tú", text);
+    input.value = "";
+    sendBtn.disabled = true;
+
+    try {
+      const resp = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text })
+      });
+      const data = await resp.json();
+      appendLog("Agente", data.reply ?? "(sin respuesta)");
+    } catch (e) {
+      console.error(e);
+      appendLog("Sistema", "Error conectando con el agente.");
+    } finally {
+      sendBtn.disabled = false;
+      input.focus();
+    }
+  }
+
+  sendBtn.addEventListener("click", enviar);
+  input.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") enviar();
+  });
+
+  // --------- Páginas de soporte (derecha) ----------
+  const viewer = document.getElementById("viewer");
+  const tabProgramas = document.getElementById("tabProgramas");
+
+  tabProgramas.addEventListener("click", () => {
+    viewer.src = `/static/pages/programas.html?base=${encodeURIComponent(BASE)}`;
+    tabProgramas.setAttribute("aria-current", "true");
+  });
+
+
+</script>
+
+</body>
+</html>

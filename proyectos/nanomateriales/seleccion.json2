@@ -1,0 +1,53 @@
+{
+  "created_at": "2026-02-28T16:28:56.254Z",
+  "count": 5,
+  "codes": [
+    "108146",
+    "111082",
+    "98",
+    "106664",
+    "53272"
+  ],
+  "items": [
+    {
+      "INSTITUCION": "Universidad Nacional Colombia",
+      "PROGRAMA_ACADEMICO": "Especializacion Nanotecnologia Aplicada Industria Petroleo Gas",
+      "NIVEL_FORMACION": "Especializacion Universitaria",
+      "MUNICIPIO_PROGRAMA": "Medellin",
+      "DEPARTAMENTO_PROGRAMA": "Antioquia",
+      "CODIGO_SNIES": "108146"
+    },
+    {
+      "INSTITUCION": "Universidad Nacional Colombia",
+      "PROGRAMA_ACADEMICO": "Especializacion Nanotecnologia",
+      "NIVEL_FORMACION": "Especializacion Universitaria",
+      "MUNICIPIO_PROGRAMA": "Manizales",
+      "DEPARTAMENTO_PROGRAMA": "Caldas",
+      "CODIGO_SNIES": "111082"
+    },
+    {
+      "INSTITUCION": "Universidad Nacional Colombia",
+      "PROGRAMA_ACADEMICO": "Maestria Ingenieria Ingenieria Materiales Procesos",
+      "NIVEL_FORMACION": "Maestria",
+      "MUNICIPIO_PROGRAMA": "Bogota, D.C.",
+      "DEPARTAMENTO_PROGRAMA": "Bogota, D.C.",
+      "CODIGO_SNIES": "98"
+    },
+    {
+      "INSTITUCION": "Universidad Nacional Colombia",
+      "PROGRAMA_ACADEMICO": "Maestria Ingenieria Materiales Procesos",
+      "NIVEL_FORMACION": "Maestria",
+      "MUNICIPIO_PROGRAMA": "Bogota, D.C.",
+      "DEPARTAMENTO_PROGRAMA": "Bogota, D.C.",
+      "CODIGO_SNIES": "106664"
+    },
+    {
+      "INSTITUCION": "Universidad Nacional Colombia",
+      "PROGRAMA_ACADEMICO": "Doctorado Ingenieria Ciencia Tecnologia Materiales",
+      "NIVEL_FORMACION": "Doctorado",
+      "MUNICIPIO_PROGRAMA": "Bogota, D.C.",
+      "DEPARTAMENTO_PROGRAMA": "Bogota, D.C.",
+      "CODIGO_SNIES": "53272"
+    }
+  ]
+}

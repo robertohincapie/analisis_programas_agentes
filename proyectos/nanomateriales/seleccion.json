@@ -1,0 +1,62 @@
+{
+  "updated_at": "2026-02-28T16:48:43.356Z",
+  "count": 6,
+  "codes": [
+    "102249",
+    "107389",
+    "111082",
+    "108146",
+    "2966",
+    "3678"
+  ],
+  "items": [
+    {
+      "INSTITUCION": "Universidad Pontificia Bolivariana",
+      "PROGRAMA_ACADEMICO": "Ingenieria Nanotecnologia",
+      "NIVEL_FORMACION": "Universitaria",
+      "MUNICIPIO_PROGRAMA": "Medellin",
+      "DEPARTAMENTO_PROGRAMA": "Antioquia",
+      "CODIGO_SNIES": "102249"
+    },
+    {
+      "INSTITUCION": "Universidad Central",
+      "PROGRAMA_ACADEMICO": "Maestria Bioingenieria Nanotecnologia",
+      "NIVEL_FORMACION": "Maestria",
+      "MUNICIPIO_PROGRAMA": "Bogota, D.C.",
+      "DEPARTAMENTO_PROGRAMA": "Bogota, D.C.",
+      "CODIGO_SNIES": "107389"
+    },
+    {
+      "INSTITUCION": "Universidad Nacional Colombia",
+      "PROGRAMA_ACADEMICO": "Especializacion Nanotecnologia",
+      "NIVEL_FORMACION": "Especializacion Universitaria",
+      "MUNICIPIO_PROGRAMA": "Manizales",
+      "DEPARTAMENTO_PROGRAMA": "Caldas",
+      "CODIGO_SNIES": "111082"
+    },
+    {
+      "INSTITUCION": "Universidad Nacional Colombia",
+      "PROGRAMA_ACADEMICO": "Especializacion Nanotecnologia Aplicada Industria Petroleo Gas",
+      "NIVEL_FORMACION": "Especializacion Universitaria",
+      "MUNICIPIO_PROGRAMA": "Medellin",
+      "DEPARTAMENTO_PROGRAMA": "Antioquia",
+      "CODIGO_SNIES": "108146"
+    },
+    {
+      "INSTITUCION": "Universidad Valle",
+      "PROGRAMA_ACADEMICO": "Ingenieria Materiales",
+      "NIVEL_FORMACION": "Universitaria",
+      "MUNICIPIO_PROGRAMA": "Santiago Cali",
+      "DEPARTAMENTO_PROGRAMA": "Valle Cauca",
+      "CODIGO_SNIES": "2966"
+    },
+    {
+      "INSTITUCION": "Universidad Antioquia",
+      "PROGRAMA_ACADEMICO": "Ingenieria Materiales",
+      "NIVEL_FORMACION": "Universitaria",
+      "MUNICIPIO_PROGRAMA": "Medellin",
+      "DEPARTAMENTO_PROGRAMA": "Antioquia",
+      "CODIGO_SNIES": "3678"
+    }
+  ]
+}

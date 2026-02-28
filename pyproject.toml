@@ -1,0 +1,18 @@
+[project]
+name = "analisis-programas-agentes"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.134.0",
+    "langchain-openai>=1.1.10",
+    "langgraph>=1.0.10",
+    "markdown>=3.10.2",
+    "matplotlib>=3.10.8",
+    "numpy>=2.4.2",
+    "pandas>=3.0.1",
+    "python-dotenv>=1.2.1",
+    "seaborn>=0.13.2",
+    "uvicorn>=0.41.0",
+]
