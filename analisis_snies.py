@@ -11,21 +11,52 @@ from agentes_de_analisis import nodo_analizar_num_estudiantes_tiempo
 from creador_reporte import nodo_creador_reporte
 
 from lector import nodo_lector_snies  # importa tu tool
-builder = StateGraph(AgentState)
-builder.add_node("lector_snies", nodo_lector_snies)
-builder.add_node("analizar_num_programas_instituciones", nodo_analizar_num_programas_instituciones)
-builder.add_node("analizar_matriculas_vs_estudiantes", nodo_analizar_matriculas_vs_estudiantes)
-builder.add_node("analizar_matriculas_vs_tiempo", nodo_analizar_matriculas_vs_tiempo)
-builder.add_node("analizar_programas_por_departamento_municipio", nodo_analizar_programas_por_departamento_municipio)
-builder.add_node("analizar_num_estudiantes_tiempo", nodo_analizar_num_estudiantes_tiempo)
-builder.add_node("creador_reporte", nodo_creador_reporte)
-builder.add_edge(START, "lector_snies")
-builder.add_edge("lector_snies", "analizar_num_programas_instituciones")
-builder.add_edge("analizar_num_programas_instituciones", "analizar_matriculas_vs_estudiantes")
-builder.add_edge("analizar_matriculas_vs_estudiantes", "analizar_matriculas_vs_tiempo")
-builder.add_edge("analizar_matriculas_vs_tiempo", "analizar_programas_por_departamento_municipio")
-builder.add_edge("analizar_programas_por_departamento_municipio", "analizar_num_estudiantes_tiempo")
-builder.add_edge("analizar_num_estudiantes_tiempo", "creador_reporte")
-builder.add_edge("creador_reporte", END)
 
-graph = builder.compile()
+def generar_reporte(project_id: str):
+    print(f"Generando reporte para proyecto {project_id}...")
+    # Aquí podrías pasar parámetros si tu función los necesita
+    builder = StateGraph(AgentState)
+    builder.add_node("lector_snies", nodo_lector_snies)
+    builder.add_node("analizar_num_programas_instituciones", nodo_analizar_num_programas_instituciones)
+    builder.add_node("analizar_matriculas_vs_estudiantes", nodo_analizar_matriculas_vs_estudiantes)
+    builder.add_node("analizar_matriculas_vs_tiempo", nodo_analizar_matriculas_vs_tiempo)
+    builder.add_node("analizar_programas_por_departamento_municipio", nodo_analizar_programas_por_departamento_municipio)
+    builder.add_node("analizar_num_estudiantes_tiempo", nodo_analizar_num_estudiantes_tiempo)
+    builder.add_node("creador_reporte", nodo_creador_reporte)
+    builder.add_edge(START, "lector_snies")
+    builder.add_edge("lector_snies", "analizar_num_programas_instituciones")
+    builder.add_edge("analizar_num_programas_instituciones", "analizar_matriculas_vs_estudiantes")
+    builder.add_edge("analizar_matriculas_vs_estudiantes", "analizar_matriculas_vs_tiempo")
+    builder.add_edge("analizar_matriculas_vs_tiempo", "analizar_programas_por_departamento_municipio")
+    builder.add_edge("analizar_programas_por_departamento_municipio", "analizar_num_estudiantes_tiempo")
+    builder.add_edge("analizar_num_estudiantes_tiempo", "creador_reporte")
+    builder.add_edge("creador_reporte", END)
+
+    graph = builder.compile()
+    with open('./proyectos/'+project_id + "/seleccion.json", "r", encoding="utf-8") as f:
+        data = json.load(f)
+    codes: list[str] = [str(c) for c in data.get("codes", [])]
+
+    estado_inicial = AgentState(
+        nombre="Ingeniería Materiales Nanotecnologia",
+        nivel=Nivel.pregrado,
+        descripcion="Programa de ingeniería enfocado en materiales a escala nanométrica.",
+        codigos=codes,
+        informacion_programas_nacionales=[],
+        target_index=1,
+        directorio="./proyectos/"+project_id+'/'
+    )
+    from pathlib import Path
+    output_path = './proyectos/'+project_id+'/reporte.html'
+    output_path = Path(output_path)
+    #output_path.parent.mkdir(parents=True, exist_ok=True)
+    print("Path de salida: ", output_path)
+    html = "<html><body><h1>Reporte</h1></body></html>"  # aquí construyes tu HTML real
+    output_path.write_text(html, encoding="utf-8")
+
+    return {
+        "ok": True,
+        "output_path": str(output_path),  # útil para debug (ruta real)
+        "reporte_url": f"/{project_id}/files/reporte.html"  # esto es lo que usa el frontend
+    }
+

@@ -1,4 +1,5 @@
 from typing import Any, List, Dict
+from langchain_openai import data
 import pandas as pd
 import matplotlib.pyplot as plt
 import unicodedata
@@ -6,20 +7,33 @@ import json
 import os
 import seaborn as sns
 from estado import AgentState, Nivel, programa_nacional
+import estado
 #from evaluador_expresiones import evaluar   
 
-def nodo_lector_snies(state: AgentState) -> Dict[str, Any]:
-    print('\nAgente: análisis de información existente de SNIES')
-    nombre = state.nombre
-    nivel = state.nivel
-    descripcion = state.descripcion
-    codigos = state.codigos
-    
-    print('Revisando si ya hay información: ', len(state.informacion_programas_nacionales))
-    resultado = lector_snies(state)   # llama la herramienta de captura de la información de snies. 
-    
+#Método que debe correr el análisis de los datos de snies de los programas seleccionados. 
+#Debe recibir la carpeta donde debe hacer la búsqueda y debe generar las imágenes relacionadas con
+#el análisis hecho de los datos. Así mismo, debe actualizar el archivo de estado del grafo
+def correr_snies(folder: str):
+    print('Corriendo análisis de SNIES para los programas seleccionados')
+    with open(f"./proyectos/{folder}/seleccion.json", "r", encoding="utf-8") as f:
+       data = json.load(f)
+    codes: list[str] = [str(c) for c in data.get("codes", [])]
+    with open(f"./proyectos/{folder}/estado.json", "r", encoding="utf-8") as f:
+        estado_json = f.read()
+        estado = AgentState.model_validate_json(estado_json)
+    estado.codigos = codes
+    estado.target_index = 0
+    # Aquí se llama a la función que hace el análisis de los datos de SNIES y genera las imágenes. 
+    resultado = lector_snies(estado)
+    estado.informacion_programas_nacionales = resultado['informacion_programas_nacionales']
+    estado.snies = resultado['snies']
+    with open(f"./proyectos/{folder}/estado.json", "w", encoding="utf-8") as f:
+        f.write(estado.model_dump_json(indent=4, ensure_ascii=False))
+    return {'Status': 'Análisis de SNIES completado', 'Resultado': resultado}
+
 def lector_snies(state) -> dict:
     print('Lector de Snies')
+    folder=state.directorio
     #Primero verificamos si existe un campo de informacion_programas_nacionales en el estado. 
     #Pero en el estado que tenemos guardado en el archivo de texto si exsite. Si ese campo existe, entonces no se hace la consulta
     #pero debe verificar que el nombre del programa y la información básica sean correctas. 
@@ -149,7 +163,7 @@ def lector_snies(state) -> dict:
     plt.grid()
     plt.tight_layout()
     plt.savefig(
-        f"./salida/num_programas_instituciones_tiempo.png", dpi=300
+        f"./proyectos/{folder}/num_programas_instituciones_tiempo.png", dpi=300
     )
 
     # JSON para el agente
@@ -254,7 +268,7 @@ def lector_snies(state) -> dict:
     )
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig(f"./salida/dispersión_estudiantes_matricula.png", dpi=300)
+    plt.savefig(f"./proyectos/{folder}/dispersión_estudiantes_matricula.png", dpi=300)
 
     # ------------------------------------------------------------------
     # 3. Valor de matrícula en el tiempo por institución
@@ -338,7 +352,7 @@ def lector_snies(state) -> dict:
     plt.ylabel("Valor de matrícula en millones de COP")
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig(f"./salida/valor_matriculas_por_periodo.png", dpi=300)
+    plt.savefig(f"./proyectos/{folder}/valor_matriculas_por_periodo.png", dpi=300)
 
     # ------------------------------------------------------------------
     # 4. Número de programas por departamento y municipio
@@ -372,7 +386,7 @@ def lector_snies(state) -> dict:
     )
     plt.tight_layout()
     plt.savefig(
-        f"./salida/programas_por_departamento_municipio.png", dpi=300
+        f"./proyectos/{folder}/programas_por_departamento_municipio.png", dpi=300
     )
 
     # JSON
@@ -425,7 +439,7 @@ def lector_snies(state) -> dict:
         plt.grid(True)
         plt.title("Número de estudiantes en el tiempo en " + exp)
         plt.savefig(
-            f"./salida/num_estudiantes_tiempo_"
+            f"./proyectos/{folder}/num_estudiantes_tiempo_"
             + exp.replace(" ", "_")
             + ".png",
             dpi=300,

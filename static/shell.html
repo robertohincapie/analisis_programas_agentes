@@ -120,7 +120,7 @@
       background: #fff;
       cursor: pointer;
       font-size: 14px;
-      white-space: nowrap;
+      /* white-space: nowrap; */
     }
     button:active { transform: translateY(1px); }
     .muted { color: var(--muted); font-size: 13px; }
@@ -206,7 +206,9 @@
         <div class="rightTop">
           <div>Páginas de soporte</div>
           <div class="tabs">
-            <button class="tabBtn" id="tabProgramas" aria-current="true">Programas</button>
+            <button class="tabBtn" id="tabProgramas" aria-current="true">Seleccionar<br>programas</button>
+            <button class="tabBtn" id="tabSnies" aria-current="false">Revisar<br>Snies</button>
+            <button class="tabBtn" id="tabReportes" aria-current="false">Generar<br>Reporte</button>
             <button class="tabBtn" id="tabOtra" aria-current="false" disabled>Otra (próximo)</button>
           </div>
         </div>
@@ -326,12 +328,64 @@ window.addEventListener("DOMContentLoaded", () => {
   // --------- Páginas de soporte (derecha) ----------
   const viewer = document.getElementById("viewer");
   const tabProgramas = document.getElementById("tabProgramas");
+  const tabReportes = document.getElementById("tabReportes");
+  const statusHdr = document.getElementById("resumenStatus"); // arriba a la derecha
 
   tabProgramas.addEventListener("click", () => {
     viewer.src = `/static/pages/programas.html?base=${encodeURIComponent(BASE)}`;
     tabProgramas.setAttribute("aria-current", "true");
+    tabReportes.setAttribute("aria-current", "false");
   });
 
+  tabSnies.addEventListener("click", async () => {
+    console.log('Iniciando proceso para generar reporte...');
+    const projectid = "{{PROJECT_ID}}"; // o de donde lo estés obteniendo
+    console.log(`${projectid}/snies`)
+    //tabProgramas.setAttribute("aria-current", "false");
+    tabReportes.disabled = false;
+    statusHdr.textContent = "Iniciando proceso...";
+
+
+    const r = await fetch(`/${projectid}/snies`, {
+      method: "GET"
+    });
+
+    if (r.ok) {
+      const data = await r.json();
+      console.log("Respuesta del servidor:", data);
+      statusHdr.textContent = "Reporte generado. Cargando página...";
+      viewer.src = `/static/pages/reportes.html?base=${encodeURIComponent(BASE)}`;
+    } else {
+      console.error("Error en la solicitud:", r.status, await r.text());
+      statusHdr.textContent = "Error generando reporte.";
+    } 
+  });
+
+  tabReportes.addEventListener("click", async () => {
+    console.log('Iniciando proceso para generar reporte...');
+    const projectid = "{{PROJECT_ID}}"; // o de donde lo estés obteniendo
+    console.log(`${projectid}/reporte`)
+    //tabProgramas.setAttribute("aria-current", "false");
+    tabReportes.disabled = false;
+    statusHdr.textContent = "Iniciando proceso...";
+
+
+    const r = await fetch(`/${projectid}/reporte`, {
+      method: "GET"
+    });
+    document.getElementById("viewer").src =
+    `/${projectid}/files/reporte.html`;
+    
+    if (r.ok) {
+      const data = await r.json();
+      console.log("Respuesta del servidor:", data);
+      statusHdr.textContent = "Reporte generado. Cargando página...";
+      viewer.src = `/static/pages/reportes.html?base=${encodeURIComponent(BASE)}`;
+    } else {
+      console.error("Error en la solicitud:", r.status, await r.text());
+      statusHdr.textContent = "Error generando reporte.";
+    } 
+  });
 
 </script>
 

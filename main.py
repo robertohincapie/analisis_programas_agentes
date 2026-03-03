@@ -1,9 +1,16 @@
 from fastapi import FastAPI, HTTPException, Body
-from fastapi.responses import HTMLResponse, JSONResponse, FileResponse
+from fastapi.responses import HTMLResponse, JSONResponse, FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 import json
 import re
+from pydantic import BaseModel
+from fastapi.responses import HTMLResponse, JSONResponse
+import uuid
+import asyncio
+from fastapi import BackgroundTasks
+from typing import Dict, Optional
+
 
 BASE_DIR = Path(__file__).resolve().parent
 STATIC_DIR = (BASE_DIR / "static").resolve()
@@ -105,3 +112,22 @@ def put_seleccion(project_id: str, payload: dict = Body(...)):
         raise HTTPException(status_code=500, detail=f"No se pudo escribir seleccion.json: {e}")
 
     return JSONResponse({"ok": True, "path": str(p), "count": payload.get("count")})
+
+from lector import correr_snies
+@app.get("/{project_id}/snies")
+def run_snies(project_id: str):
+    print(f"Recibida solicitud para correr SNIES en proyecto {project_id}")
+    correr_snies(project_id)
+    return {"status": "SNIES analysis completed", "project_id": project_id}
+
+from agentes_de_analisis import pagina_temporal
+@app.get("/{project_id}/reporte")
+def run_reporte(project_id: str):
+    print(f"Recibida solicitud para Generar el reporte en proyecto {project_id}")
+    pagina_temporal(project_id)
+    
+    return RedirectResponse(
+        url=f"/{project_id}/files/reporte.html",
+        status_code=302
+    )
+
