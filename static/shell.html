@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Workflow UI</title>
+  <title>Sistema de gestión de programas nuevos y existentes</title>
   <style>
     :root {
       --bg: #fafafa;
@@ -207,8 +207,10 @@
           <div>Páginas de soporte</div>
           <div class="tabs">
             <button class="tabBtn" id="tabProgramas" aria-current="true">Seleccionar<br>programas</button>
-            <button class="tabBtn" id="tabSnies" aria-current="false">Revisar<br>Snies</button>
+            <button class="tabBtn" id="tabSnies" aria-current="false">Analizar<br>Snies</button>
+            <button class="tabBtn" id="tabMirarSnies" aria-current="false">Mostrar<br>Snies</button>
             <button class="tabBtn" id="tabReportes" aria-current="false">Generar<br>Reporte</button>
+            <button class="tabBtn" id="tabMirarReporte" aria-current="false">Mirar<br>Reporte</button>
             <button class="tabBtn" id="tabOtra" aria-current="false" disabled>Otra (próximo)</button>
           </div>
         </div>
@@ -354,11 +356,17 @@ window.addEventListener("DOMContentLoaded", () => {
       const data = await r.json();
       console.log("Respuesta del servidor:", data);
       statusHdr.textContent = "Reporte generado. Cargando página...";
-      viewer.src = `/static/pages/reportes.html?base=${encodeURIComponent(BASE)}`;
+      viewer.src = `/static/pages/reportes.html?projectid=${encodeURIComponent(BASE)}`;
     } else {
       console.error("Error en la solicitud:", r.status, await r.text());
       statusHdr.textContent = "Error generando reporte.";
     } 
+  });
+
+  tabMirarSnies.addEventListener("click", () => {
+    viewer.src = `/static/pages/reportes.html?projectid=${encodeURIComponent(BASE)}`;
+    tabProgramas.setAttribute("aria-current", "true");
+    tabReportes.setAttribute("aria-current", "false");
   });
 
   tabReportes.addEventListener("click", async () => {
@@ -381,10 +389,18 @@ window.addEventListener("DOMContentLoaded", () => {
       console.log("Respuesta del servidor:", data);
       statusHdr.textContent = "Reporte generado. Cargando página...";
       viewer.src = `/static/pages/reportes.html?base=${encodeURIComponent(BASE)}`;
+      
     } else {
       console.error("Error en la solicitud:", r.status, await r.text());
       statusHdr.textContent = "Error generando reporte.";
     } 
+  });
+
+  tabMirarReporte.addEventListener("click", () => {
+    viewer.src = `${BASE}/files/reporte.html`;
+    console.log(`${BASE}/files/reporte.html`);
+    tabProgramas.setAttribute("aria-current", "true");
+    tabReportes.setAttribute("aria-current", "false");
   });
 
 </script>

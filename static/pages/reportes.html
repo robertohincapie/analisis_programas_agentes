@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>Reportes</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f5f5;
+      margin: 0;
+      padding: 24px;
+    }
+
+    .card {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: white;
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+    }
+
+    h2 { margin: 0 0 8px 0; }
+    p { margin: 0 0 16px 0; color: #444; }
+
+    .toolbar {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #f0f0f0;
+      font-size: 12px;
+      color: #333;
+    }
+
+    .spinner {
+      width: 26px;
+      height: 26px;
+      border: 4px solid #ddd;
+      border-top: 4px solid #333;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+      margin-top: 10px;
+    }
+
+    .imgcard {
+      border: 1px solid #eee;
+      border-radius: 12px;
+      padding: 10px;
+      background: #fff;
+    }
+
+    .imgcard .label {
+      font-size: 13px;
+      color: #333;
+      margin: 0 0 8px 0;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      border-radius: 10px;
+      display: block;
+      background: #fafafa;
+    }
+
+    .error {
+      margin-top: 12px;
+      color: #b00020;
+      font-size: 13px;
+      display: none;
+    }
+
+    .note {
+      margin-top: 14px;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="card">
+    <div class="toolbar">
+      <div>
+        <h2>Reportes</h2>
+        <p>Imágenes generadas por el proceso.</p>
+      </div>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <span id="projectPill" class="pill">project: -</span>
+        <span id="statusPill" class="pill">cargando...</span>
+        <div id="spinner" class="spinner" aria-label="Cargando"></div>
+      </div>
+    </div>
+
+    <div id="grid" class="grid"></div>
+    <div id="err" class="error"></div>
+
+    <div class="note">
+      Si alguna imagen no aparece, revisa que el backend esté sirviendo <code>/proyectos/&lt;project_id&gt;/imgN.png</code> por HTTP (no desde el sistema de archivos).
+    </div>
+  </div>
+
+  <script>
+    // Lee query params
+    const params = new URLSearchParams(window.location.search);
+    const base = params.get("base") || ""; // e.g. "http://localhost:8000" o "" si same-origin
+    const projectid = params.get("projectid") || params.get("project_id") || ""; // opcional si quieres pasarlo
+
+    // Si NO vas a pasar projectid por query, puedes incrustarlo en plantilla como hiciste en programas.html:
+    // const projectid = "{{PROJECT_ID}}";
+
+    const projectPill = document.getElementById("projectPill");
+    const statusPill = document.getElementById("statusPill");
+    const spinner = document.getElementById("spinner");
+    const grid = document.getElementById("grid");
+    const errBox = document.getElementById("err");
+
+    if (projectid) projectPill.textContent = `project: ${projectid}`;
+    else projectPill.textContent = `project: (no definido)`;
+
+    // Construye URL segura uniendo base + path
+    function joinUrl(baseUrl, path) {
+      if (!baseUrl) return path;                 // same-origin
+      return baseUrl.replace(/\/$/, "") + path;  // quita slash final y concatena
+    }
+
+    // Cambia aquí si tus imágenes se sirven por otra ruta HTTP.
+    // Tú dijiste que están en el disco en: /proyectos/{project_id}/img1.png ...
+    // En HTTP, idealmente deberían estar disponibles así:
+    //   GET /proyectos/{project_id}/img1.png
+    function imageUrl(n) {
+      if (!projectid) return null;
+      const path = `/proyectos/${encodeURIComponent(projectid)}/${n}.png`;
+      // Cache-bust para evitar que el navegador muestre viejo
+      const bust = `?t=${Date.now()}`;
+      return joinUrl(base, path) + bust;
+    }
+
+    // Render
+    const total = 7;
+    let loaded = 0;
+    let failed = 0;
+
+    function setDone() {
+      spinner.style.display = "none";
+      if (failed === 0) {
+        statusPill.textContent = "listo";
+      } else {
+        statusPill.textContent = `listo (${failed} con error)`;
+      }
+    }
+
+    function showError(msg) {
+      errBox.style.display = "block";
+      errBox.textContent = msg;
+    }
+
+    if (!projectid) {
+      spinner.style.display = "none";
+      statusPill.textContent = "falta projectid";
+      showError("No se encontró projectid. Pásalo en la URL (?projectid=...) o incrústalo como {{PROJECT_ID}}.");
+    } else {
+        const imagenes = [
+            "valor_matriculas_por_periodo",
+            "dispersión_estudiantes_matricula",
+            "num_programas_instituciones_tiempo",
+            "programas_por_departamento_municipio",
+            "num_estudiantes_tiempo_Todos_los_sectores",
+            "num_estudiantes_tiempo_Universidades_Oficiales",
+            "num_estudiantes_tiempo_Universidades_Privadas"
+        ];
+
+      for (const nombre of imagenes) {
+        const url = imageUrl(nombre);
+
+        const wrapper = document.createElement("div");
+        wrapper.className = "imgcard";
+
+        const label = document.createElement("p");
+        label.className = "label";
+        label.textContent = `Imagen ${nombre}`;
+
+        const img = document.createElement("img");
+        img.alt = `Reporte imagen ${nombre}`;
+        img.src = url;
+
+        img.onload = () => {
+          loaded++;
+          if (loaded + failed === total) setDone();
+        };
+
+        img.onerror = () => {
+          failed++;
+          // Muestra un placeholder simple
+          img.alt = `No se pudo cargar ${nombre}.png`;
+          img.removeAttribute("src");
+          img.style.height = "160px";
+          img.style.display = "flex";
+          img.style.alignItems = "center";
+          img.style.justifyContent = "center";
+          img.style.background = "#fff3f3";
+          img.style.border = "1px dashed #e0a0a0";
+          img.style.borderRadius = "10px";
+
+          // Truco: reemplazamos por un div textual dentro del wrapper
+          const placeholder = document.createElement("div");
+          placeholder.style.padding = "14px";
+          placeholder.style.color = "#8a1f1f";
+          placeholder.style.fontSize = "13px";
+          placeholder.textContent = `No disponible: /proyectos/${projectid}/${nombre}.png`;
+
+          wrapper.appendChild(label);
+          wrapper.appendChild(placeholder);
+
+          // Quita la imagen si falló
+          try { wrapper.removeChild(img); } catch (e) {}
+
+          if (loaded + failed === total) setDone();
+          showError("Una o más imágenes no pudieron cargarse. Revisa que el backend esté sirviendo esos archivos por HTTP.");
+        };
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(img);
+        grid.appendChild(wrapper);
+      }
+
+      statusPill.textContent = "cargando imágenes...";
+    }
+  </script>
+</body>
+</html>

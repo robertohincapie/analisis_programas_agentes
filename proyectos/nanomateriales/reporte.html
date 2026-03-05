@@ -1,74 +1,169 @@
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Generando reporte</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Reporte: Ingeniería Materiales Nanotecnologia</title>
+
   <style>
     body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      background-color: #f5f5f5;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
       margin: 0;
+      background: #f5f7fa;
+      color: #1f2937;
+      line-height: 1.6;
     }
 
-    .card {
+    .container {
+      max-width: 900px;
+      margin: 40px auto;
+      padding: 40px;
       background: white;
-      padding: 30px 40px;
-      border-radius: 16px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.06);
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 32px;
+      border-bottom: 3px solid #e5e7eb;
+      padding-bottom: 12px;
+    }
+
+    h2 {
+      margin-top: 50px;
+      font-size: 22px;
+      border-left: 5px solid #3b82f6;
+      padding-left: 12px;
+    }
+
+    ul {
+      padding-left: 22px;
+    }
+
+    li {
+      margin-bottom: 8px;
+    }
+
+    .section {
+      margin-top: 40px;
+    }
+
+    .section img {
+      width: 100%;
+      border-radius: 10px;
+      margin: 18px 0;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+
+    .analysis {
+      background: #f9fafb;
+      padding: 18px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+    }
+
+    .footer {
+      margin-top: 60px;
+      font-size: 13px;
+      color: #6b7280;
       text-align: center;
-    }
-
-    .spinner {
-      margin-top: 20px;
-      width: 30px;
-      height: 30px;
-      border: 4px solid #ddd;
-      border-top: 4px solid #333;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
 
-  <div class="card">
-    <h2>Generando reporte...</h2>
-    <p>Por favor espere mientras se procesa la información.</p>
-    <div class="spinner"></div>
+  <div class="container">
+
+    <!-- TÍTULO -->
+    <h1>Ingeniería Materiales Nanotecnologia</h1>
+    <!-- DESCRIPCIÓN -->
+    <p>Programa de ingeniería enfocado en materiales a escala nanométrica.</p>
+
+    <!-- INFORMACIÓN BÁSICA -->
+    <ul>
+      <li><strong>Fecha de generación:</strong> 5 de marzo de 2026</li>
+      <li><strong>Total de programas analizados:</strong> 10</li>
+    </ul>
+    
+<div class="section">
+      <h2>Análisis de número de programas e instituciones en el tiempo</h2>
+
+      <img src="num_programas_instituciones_tiempo.png" alt="Análisis de número de programas e instituciones en el tiempo">
+
+      <div class="analysis">
+        <p>
+        <p>A lo largo del tiempo, predominan las instituciones oficiales en número, especialmente desde el inicio del periodo hasta aproximadamente 2006, donde el sector privado mantiene un número menor y constante de instituciones. A partir de 2007, el sector privado incrementa su número de instituciones, alcanzando paridad o superando al sector oficial en algunos semestres, aunque el sector oficial sigue mostrando un número estable o ligeramente superior en general.</p>
+<p>En cuanto a los programas, la tendencia es similar a la de las instituciones. Los programas oficiales predominan en cantidad durante la mayor parte del periodo, con un número constante de 2 programas por semestre hasta 2017. Desde 2018 en adelante, el sector oficial muestra un aumento a 3 y luego a 5 programas, mientras que el sector privado también incrementa sus programas, aunque en menor medida, llegando a 3 programas en los últimos años.</p>
+<p>Se observa una tendencia clara de crecimiento en ambos sectores a partir de 2007, con un aumento más marcado en el sector privado en términos de instituciones y programas hasta 2017, seguido de una estabilización o ligera disminución. El sector oficial muestra un crecimiento más sostenido y constante, especialmente a partir de 2018, con incrementos en instituciones y programas que se mantienen hasta 2024. No se identifican cambios bruscos, sino un crecimiento gradual y un equilibrio relativo entre ambos sectores en los últimos años.</p>
+        </p>
+      </div>
+    </div>
+
+<div class="section">
+      <h2>Análisis de matrícula vs estudiantes</h2>
+
+      <img src="dispersión_estudiantes_matricula.png" alt="Análisis de matrícula vs estudiantes">
+
+      <div class="analysis">
+        <p>
+        <p>Las universidades privadas presentan un valor promedio de matrícula considerablemente más alto que las oficiales. La matrícula promedio en las privadas es aproximadamente 9.7 millones de pesos colombianos, mientras que en las oficiales es alrededor de 1.4 millones, indicando una clara tendencia de precios más elevados en el sector privado.</p>
+<p>En cuanto a la cantidad de estudiantes, las universidades oficiales tienen un promedio significativamente mayor, con alrededor de 110 estudiantes por programa, frente a un promedio de aproximadamente 30 estudiantes en las privadas. Esto sugiere que los programas oficiales atraen a un mayor número de estudiantes en promedio.</p>
+<p>No se observa una correlación negativa clara entre el precio de la matrícula y el número de estudiantes matriculados. Algunos programas privados con matrícula alta tienen pocos estudiantes, pero también hay programas oficiales con matrícula baja y alta cantidad de estudiantes. La relación entre precio y número de estudiantes no es lineal ni determinante en este conjunto de datos.</p>
+<p>Para una universidad privada que considere ofrecer un programa similar, la oportunidad radica en posicionar el programa con un precio competitivo, dado que los programas privados actuales tienen matrículas elevadas y menor número de estudiantes. Ajustar el precio a un nivel más accesible podría atraer a un mayor número de estudiantes, aprovechando la demanda potencial que se observa en los programas oficiales con matrículas más bajas y mayor matrícula estudiantil.</p>
+        </p>
+      </div>
+    </div>
+
+<div class="section">
+      <h2>Análisis de valor matrícula en el tiempo</h2>
+
+      <img src="valor_matriculas_por_periodo.png" alt="Análisis de valor matrícula en el tiempo">
+
+      <div class="analysis">
+        <p>
+        <p>Los valores de matrícula en general muestran una tendencia al alza en la mayoría de los programas y universidades, especialmente a partir de 2022-1 hasta 2024-2. Sin embargo, hay casos con valores nulos o cero en ciertos períodos, lo que puede indicar interrupciones o falta de datos, como en la Universidad Antioquia en 2022-2 y la Universidad Nacional Colombia en varios períodos posteriores a 2023-1. En programas oficiales, la matrícula tiende a incrementarse gradualmente, aunque con algunas caídas o valores cero en ciertos períodos. En programas privados, la matrícula también muestra un aumento, pero con fluctuaciones más marcadas y valores más altos en general.</p>
+<p>Comparando el sector privado con el oficial, las universidades privadas presentan valores de matrícula significativamente más altos en millones, con incrementos notables en programas como la Maestría en Bioingeniería Nanotecnología de la Universidad Central y la Ingeniería Nanotecnología de la Universidad Pontificia Bolivariana. Las universidades oficiales tienen valores de matrícula más bajos y un crecimiento más moderado, con algunos programas mostrando interrupciones o valores cero en ciertos períodos. La evolución en privadas es más volátil pero con una tendencia clara al aumento, mientras que en oficiales es más estable pero con menor magnitud.</p>
+<p>El análisis de oportunidad para un programa similar en una universidad privada indica un mercado con matrícula en aumento y valores monetarios elevados, lo que sugiere una alta demanda y disposición a pagar. La tendencia creciente en privadas, a pesar de la volatilidad, muestra potencial para captar estudiantes con programas especializados en áreas como nanotecnología e ingeniería de materiales. Sin embargo, se debe considerar la competencia con universidades ya establecidas y la necesidad de mantener la calidad y diferenciación para justificar los valores de matrícula más altos observados en el sector privado.</p>
+        </p>
+      </div>
+    </div>
+
+<div class="section">
+      <h2>Análisis de programas por municipios</h2>
+
+      <img src="programas_por_departamento_municipio.png" alt="Análisis de programas por municipios">
+
+      <div class="analysis">
+        <p>
+        <p>Antioquia, con Medellín, presenta la mayor cantidad de programas académicos (5), lo que refleja una concentración significativa en esta región. Bogotá, D.C., con 2 programas, y Valle del Cauca, con 1 programa en Santiago Cali, muestran una menor oferta. La vocación económica de Antioquia, especialmente Medellín, está orientada hacia la industria, tecnología y servicios, sectores que suelen demandar una oferta educativa diversificada y especializada, lo que podría explicar la mayor cantidad de programas. Bogotá, como capital y centro administrativo, tiene una oferta moderada, mientras que Valle del Cauca, con una economía basada en agricultura e industria, tiene menor cantidad de programas.</p>
+<p>La apertura de un nuevo programa en Medellín podría tener una buena oportunidad debido a la alta concentración de programas existentes, lo que indica una demanda educativa activa y un mercado consolidado. Sin embargo, esta concentración también implica competencia, por lo que el programa debería diferenciarse en calidad o especialización para captar estudiantes.</p>
+<p>Para una universidad privada, la oportunidad en Medellín es favorable si se aprovechan las tendencias de diversificación y especialización en sectores económicos clave. La alta concentración de programas sugiere un mercado dinámico, pero competitivo, por lo que la estrategia debe enfocarse en nichos específicos o en la innovación curricular para destacar frente a la oferta existente.</p>
+        </p>
+      </div>
+    </div>
+
+<div class="section">
+      <h2>Análisis del número de estudiantes en el tiempo</h2>
+
+      <img src="num_estudiantes_tiempo_Universidades_Oficiales.png" alt="Análisis del número de estudiantes en el tiempo"><img src="num_estudiantes_tiempo_Universidades_Privadas.png" alt="Análisis del número de estudiantes en el tiempo"><img src="num_estudiantes_tiempo_Todos_los_sectores.png" alt="Análisis del número de estudiantes en el tiempo">
+
+      <div class="analysis">
+        <p>
+        <p>En todos los sectores, los valores de inscritos y matriculados muestran una tendencia general de estabilidad con fluctuaciones moderadas a lo largo del tiempo. En universidades oficiales, los inscritos y matriculados presentan cifras altas y relativamente consistentes, con matriculados generalmente superiores a inscritos en varios periodos, lo que puede indicar registros administrativos o procesos de matrícula que incluyen estudiantes de periodos anteriores. En universidades privadas, los datos son prácticamente nulos hasta el periodo 2009-1, donde comienzan a aparecer valores bajos y dispersos, con matriculados y admitidos muy inferiores a los oficiales y al total, reflejando una participación mucho menor en el programa.</p>
+<p>La comparación entre inscritos y matriculados revela que en todos los sectores y en universidades oficiales, la cantidad de matriculados supera o es cercana a la de inscritos, lo que sugiere una alta capacidad de absorción y conversión del interés en matrícula efectiva. En universidades privadas, la relación es más variable y en general baja, con matriculados que no siempre corresponden a inscritos, indicando una menor capacidad de absorción o problemas en el proceso de matrícula. Esto implica que en el sector oficial existe un buen equilibrio entre interés y matrícula, mientras que en el privado la conversión es limitada, posiblemente por barreras administrativas, económicas o de oferta.</p>
+<p>Para una universidad privada, la oportunidad radica en la baja participación actual y la existencia de demanda potencial no satisfecha. La ausencia de datos significativos en los primeros años y la aparición reciente de matriculados y admitidos sugieren un mercado poco explotado. Dado que el sector oficial mantiene cifras altas y estables, una universidad privada podría captar estudiantes que buscan alternativas o que no logran matricularse en el sector oficial. Sin embargo, debe mejorar la capacidad de absorción para convertir inscritos en matriculados, optimizando procesos de admisión y matrícula, y posiblemente ajustando oferta académica y costos para aumentar la competitividad y atraer mayor interés.</p>
+        </p>
+      </div>
+    </div>
+
+    <!-- PIE -->
+    <div class="footer">
+      Reporte generado automáticamente · Sistema de análisis académico
+    </div>
+
   </div>
-
-  <script>
-    const reporteUrl = "reporte.html";
-
-    async function verificarReporte() {
-      try {
-        const response = await fetch(reporteUrl, { method: "HEAD", cache: "no-store" });
-
-        if (response.ok) {
-          // Si existe, redirige
-          window.location.href = reporteUrl;
-        }
-      } catch (error) {
-        console.log("Reporte aún no disponible...");
-      }
-    }
-
-    // Revisar cada 2 segundos
-    setInterval(verificarReporte, 2000);
-  </script>
 
 </body>
 </html>
-    

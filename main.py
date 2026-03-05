@@ -22,6 +22,7 @@ app = FastAPI()
 
 # ✅ Montaje único de recursos compartidos
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+app.mount("/proyectos", StaticFiles(directory=str(PROJECTS_ROOT)), name="proyectos")
 
 PROJECT_ID_RE = re.compile(r"^[a-zA-Z0-9_-]{2,64}$")
 
@@ -44,6 +45,14 @@ def safe_join(root: Path, rel_path: str) -> Path:
         raise HTTPException(status_code=400, detail="Ruta inválida")
     return p
 
+@app.get("/favicon.ico", include_in_schema=False)
+def favicon():
+    return FileResponse("static/favicon.png")
+
+# Algunos navegadores (o algo en tu HTML) lo está pidiendo con slash final:
+@app.get("/favicon.ico/", include_in_schema=False)
+def favicon_slash():
+    return FileResponse("static/favicon.png")
 
 # ✅ Endpoint COMPARTIDO (no depende del proyecto)
 @app.get("/api/programas")
@@ -120,11 +129,12 @@ def run_snies(project_id: str):
     correr_snies(project_id)
     return {"status": "SNIES analysis completed", "project_id": project_id}
 
-from agentes_de_analisis import pagina_temporal
+from agentes_de_analisis import correr_analisis, pagina_temporal
 @app.get("/{project_id}/reporte")
 def run_reporte(project_id: str):
     print(f"Recibida solicitud para Generar el reporte en proyecto {project_id}")
     pagina_temporal(project_id)
+    correr_analisis(project_id)
     
     return RedirectResponse(
         url=f"/{project_id}/files/reporte.html",

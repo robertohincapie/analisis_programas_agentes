@@ -1,0 +1,89 @@
+{
+  "updated_at": "2026-03-05T16:16:52.663Z",
+  "count": 9,
+  "codes": [
+    "109231",
+    "111549",
+    "106558",
+    "109230",
+    "106434",
+    "4472",
+    "111103",
+    "4471",
+    "51573"
+  ],
+  "items": [
+    {
+      "INSTITUCION": "Colegio Mayor Senora Rosario",
+      "PROGRAMA_ACADEMICO": "Maestria Educacion Profesionales Salud",
+      "NIVEL_FORMACION": "Maestria",
+      "MUNICIPIO_PROGRAMA": "Bogota, D.C.",
+      "DEPARTAMENTO_PROGRAMA": "Bogota, D.C.",
+      "CODIGO_SNIES": "109231"
+    },
+    {
+      "INSTITUCION": "Universidad Antioquia",
+      "PROGRAMA_ACADEMICO": "Maestria Educacion Salud",
+      "NIVEL_FORMACION": "Maestria",
+      "MUNICIPIO_PROGRAMA": "Medellin",
+      "DEPARTAMENTO_PROGRAMA": "Antioquia",
+      "CODIGO_SNIES": "111549"
+    },
+    {
+      "INSTITUCION": "Fundacion Universitaria Juan N. Corpas",
+      "PROGRAMA_ACADEMICO": "Maestria Educacion Salud",
+      "NIVEL_FORMACION": "Maestria",
+      "MUNICIPIO_PROGRAMA": "Bogota, D.C.",
+      "DEPARTAMENTO_PROGRAMA": "Bogota, D.C.",
+      "CODIGO_SNIES": "106558"
+    },
+    {
+      "INSTITUCION": "Colegio Mayor Senora Rosario",
+      "PROGRAMA_ACADEMICO": "Especializacion Educacion Profesionales Salud",
+      "NIVEL_FORMACION": "Especializacion Universitaria",
+      "MUNICIPIO_PROGRAMA": "Bogota, D.C.",
+      "DEPARTAMENTO_PROGRAMA": "Bogota, D.C.",
+      "CODIGO_SNIES": "109230"
+    },
+    {
+      "INSTITUCION": "Universidad Sabana",
+      "PROGRAMA_ACADEMICO": "Maestria Educacion Medica",
+      "NIVEL_FORMACION": "Maestria",
+      "MUNICIPIO_PROGRAMA": "Chia",
+      "DEPARTAMENTO_PROGRAMA": "Cundinamarca",
+      "CODIGO_SNIES": "106434"
+    },
+    {
+      "INSTITUCION": "Universidad Sabana",
+      "PROGRAMA_ACADEMICO": "Especializacion Educacion Medica",
+      "NIVEL_FORMACION": "Especializacion Universitaria",
+      "MUNICIPIO_PROGRAMA": "Chia",
+      "DEPARTAMENTO_PROGRAMA": "Cundinamarca",
+      "CODIGO_SNIES": "4472"
+    },
+    {
+      "INSTITUCION": "Universidad Ces",
+      "PROGRAMA_ACADEMICO": "Maestria Educacion Medica",
+      "NIVEL_FORMACION": "Maestria",
+      "MUNICIPIO_PROGRAMA": "Medellin",
+      "DEPARTAMENTO_PROGRAMA": "Antioquia",
+      "CODIGO_SNIES": "111103"
+    },
+    {
+      "INSTITUCION": "Universidad Ces",
+      "PROGRAMA_ACADEMICO": "Especializacion Educacion Medica",
+      "NIVEL_FORMACION": "Especializacion Universitaria",
+      "MUNICIPIO_PROGRAMA": "Medellin",
+      "DEPARTAMENTO_PROGRAMA": "Antioquia",
+      "CODIGO_SNIES": "4471"
+    },
+    {
+      "INSTITUCION": "Universidad Ces",
+      "PROGRAMA_ACADEMICO": "Especializacion Educacion Medica",
+      "NIVEL_FORMACION": "Especializacion Universitaria",
+      "MUNICIPIO_PROGRAMA": "Cartagena Indias",
+      "DEPARTAMENTO_PROGRAMA": "Bolivar",
+      "CODIGO_SNIES": "51573"
+    }
+  ]
+}

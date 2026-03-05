@@ -5,13 +5,13 @@ from langchain_core.messages import SystemMessage, HumanMessage
 import os
 from estado import AgentState, Nivel
 import json
-
+from creador_reporte import nodo_creador_reporte
+from langgraph.graph import StateGraph, START, END
 from dotenv import load_dotenv
 load_dotenv()
 
 def pagina_temporal(project_id: str):
     html = """
-<!DOCTYPE html>
 <html lang="es">
 <head>
   <meta charset="UTF-8">
@@ -62,24 +62,15 @@ def pagina_temporal(project_id: str):
   </div>
 
   <script>
-    const reporteUrl = "reporte.html";
+  const reporteUrl = "reporte.html";
+  const esperaMs = 5000; // 5 segundos
 
-    async function verificarReporte() {
-      try {
-        const response = await fetch(reporteUrl, { method: "HEAD", cache: "no-store" });
-
-        if (response.ok) {
-          // Si existe, redirige
-          window.location.href = reporteUrl;
-        }
-      } catch (error) {
-        console.log("Reporte aún no disponible...");
-      }
-    }
-
-    // Revisar cada 2 segundos
-    setInterval(verificarReporte, 2000);
+  setTimeout(() => {
+    window.location.href = reporteUrl;
+  }, esperaMs);
+</script>
   </script>
+
 
 </body>
 </html>
@@ -88,6 +79,45 @@ def pagina_temporal(project_id: str):
         f.write(html)
         
 llm = ChatOpenAI(model="gpt-4.1-mini", temperature=0)
+
+def correr_analisis(project_id: str):
+    print(f"Corriendo análisis para proyecto {project_id}")
+    with open(f"./proyectos/{project_id}/estado.json", "r", encoding="utf-8") as f:
+        state = json.load(f)
+    estado = AgentState(
+        nombre=state["nombre"],
+        nivel=state["nivel"],
+        descripcion=state["descripcion"],
+        codigos=state["codigos"],
+        snies=state["snies"],
+        informacion_programas_nacionales=state["informacion_programas_nacionales"],
+        target_index=1,
+        directorio=project_id
+    )
+    #Creación del grafo de análisis
+    builder = StateGraph(AgentState)
+    # Añadir el nodo
+    builder.add_node("analizar_num_programas_instituciones", nodo_analizar_num_programas_instituciones)
+    builder.add_node("analizar_matriculas_vs_estudiantes", nodo_analizar_matriculas_vs_estudiantes)
+    builder.add_node("analizar_matriculas_vs_tiempo", nodo_analizar_matriculas_vs_tiempo)
+    builder.add_node("analizar_programas_por_departamento_municipio", nodo_analizar_programas_por_departamento_municipio)
+    builder.add_node("analizar_num_estudiantes_tiempo", nodo_analizar_num_estudiantes_tiempo)
+    builder.add_node("creador_reporte", nodo_creador_reporte)
+    #Creación de la topología del grafo
+    builder.add_edge(START, "analizar_num_programas_instituciones")
+    builder.add_edge("analizar_num_programas_instituciones", "analizar_matriculas_vs_estudiantes")
+    builder.add_edge("analizar_matriculas_vs_estudiantes", "analizar_matriculas_vs_tiempo")
+    builder.add_edge("analizar_matriculas_vs_tiempo", "analizar_programas_por_departamento_municipio")
+    builder.add_edge("analizar_programas_por_departamento_municipio", "analizar_num_estudiantes_tiempo")
+    builder.add_edge("analizar_num_estudiantes_tiempo", "creador_reporte")
+    builder.add_edge("creador_reporte", END)
+    graph = builder.compile()
+
+    final_state = graph.invoke(estado)
+    final_state = AgentState.model_validate(final_state)
+
+    with open(f"./proyectos/{project_id}/estado.json", "w", encoding="utf-8") as f:
+        f.write(final_state.model_dump_json(indent=4, ensure_ascii=False))
 
 def nodo_analizar_num_programas_instituciones(
     state: AgentState

@@ -142,6 +142,6 @@ def nodo_creador_reporte(state: AgentState) -> Dict[str, Any]:
 </body>
 </html>
 """
-    output_html = os.path.join(state.project_dir, "resumen.html")
-    with open(output_html, "w", encoding="utf-8") as f:
+    project_id = state.directorio
+    with open(f"./proyectos/{project_id}/reporte.html", "w", encoding="utf-8") as f:
       f.write(cad)
