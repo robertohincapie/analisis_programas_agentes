@@ -211,7 +211,7 @@
             <button class="tabBtn" id="tabMirarSnies" aria-current="false">Mostrar<br>Snies</button>
             <button class="tabBtn" id="tabReportes" aria-current="false">Generar<br>Reporte</button>
             <button class="tabBtn" id="tabMirarReporte" aria-current="false">Mirar<br>Reporte</button>
-            <button class="tabBtn" id="tabOtra" aria-current="false" disabled>Otra (próximo)</button>
+            <button class="tabBtn" id="tabRevisionProgramas" aria-current="false">Informacion<br>Programas</button>
           </div>
         </div>
       </h3>
@@ -402,6 +402,16 @@ window.addEventListener("DOMContentLoaded", () => {
     tabProgramas.setAttribute("aria-current", "true");
     tabReportes.setAttribute("aria-current", "false");
   });
+
+    tabRevisionProgramas.addEventListener("click", () => {
+    const cleanBase = BASE.replace(/^\/+/, "");
+    viewer.src = `/static/pages/revision_programas.html?projectid=${cleanBase}`;  
+    console.log(`/static/pages/revision_programas.html?projectid=${cleanBase}`);
+    tabProgramas.setAttribute("aria-current", "true");
+    tabReportes.setAttribute("aria-current", "false");
+  });
+
+
 
 </script>
 

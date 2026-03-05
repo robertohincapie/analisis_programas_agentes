@@ -1,0 +1,412 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Editor programas nacionales</title>
+  <style>
+    :root { --b:#ddd; --bg:#fafafa; --fg:#111; --mut:#666; --card:#fff; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; background: var(--bg); color: var(--fg); }
+    header { padding: 16px 18px; border-bottom: 1px solid var(--b); background: #fff; position: sticky; top:0; z-index: 10; }
+    h1 { margin:0; font-size: 18px; }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 16px; }
+    .row { display:flex; gap:10px; flex-wrap: wrap; align-items:center; }
+    button {
+      border: 1px solid var(--b);
+      background: #fff;
+      padding: 8px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button.primary { background: #111; color:#fff; border-color:#111; }
+    button:disabled { opacity:.6; cursor:not-allowed; }
+    .pill { font-size: 12px; color: var(--mut); }
+    .status { padding: 6px 10px; border-radius: 999px; border: 1px solid var(--b); background: #fff; font-size: 12px; }
+    .status.ok { border-color: #b7e4c7; background:#f0fff4; }
+    .status.warn { border-color: #ffd6a5; background:#fff7ed; }
+    .status.err { border-color: #ffadad; background:#fff1f2; }
+    .tabs { display:flex; gap:8px; flex-wrap: wrap; margin-top: 12px; }
+    .tab {
+      text-align:left;
+      width: 320px;
+      max-width: 100%;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--b);
+      background: #fff;
+    }
+    .tab.active { outline: 2px solid #111; border-color:#111; }
+    .tab .t1 { font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tab .t2 { font-size: 12px; color: var(--mut); margin-top: 2px; }
+    .card {
+      margin-top: 14px;
+      border: 1px solid var(--b);
+      border-radius: 16px;
+      background: var(--card);
+      padding: 14px;
+    }
+    .grid { display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } .tab { width: 100%; } }
+    label { display:block; font-size: 12px; color: var(--mut); margin-bottom: 4px; }
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--b);
+      border-radius: 10px;
+      padding: 9px 10px;
+      font: inherit;
+      background: #fff;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    h2 { margin: 0 0 10px 0; font-size: 16px; }
+    h3 { margin: 14px 0 8px 0; font-size: 14px; }
+    .plan-item { display:flex; gap:8px; align-items:center; margin-bottom: 8px; }
+    .plan-item input { flex: 1; }
+    details { margin-top: 12px; }
+    pre { background:#0b1020; color:#e6e6e6; padding: 12px; border-radius: 12px; overflow:auto; }
+    .foot { margin-top: 14px; color: var(--mut); font-size: 12px; }
+    .kbd { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono"; background:#f3f4f6; border:1px solid #e5e7eb; padding: 1px 6px; border-radius: 8px; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <div class="row" style="justify-content:space-between;">
+        <h1>Editor programas nacionales</h1>
+        <div class="row">
+          <button id="btnReload" title="Recargar desde el servidor">Recargar</button>
+          <button id="btnAutofill">Buscar automáticamente</button>
+          <button id="btnSave" class="primary">Guardar</button>
+          <span id="dirty" class="pill"></span>
+          <span id="status" class="status">Listo</span>
+        </div>
+      </div>
+      <div class="tabs" id="tabs"></div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="content" class="card" style="display:none;"></div>
+
+    <div class="foot">
+      Para guardar, debe existir un servidor que atienda <span class="kbd">GET /api/estado</span> y <span class="kbd">PUT /api/estado</span>.
+      Si abres este archivo como <span class="kbd">file://</span>, el guardado fallará.
+    </div>
+  </main>
+
+  <script>
+    // ======= Config =======
+    function getProjectId() {
+        const params = new URLSearchParams(window.location.search);
+        return (params.get("projectid") || "").trim();
+    }
+
+    const projectId = getProjectId();
+
+    // Si no hay projectId, usa el root "/"
+    const API_PREFIX = projectId ? `/${encodeURIComponent(projectId)}` : "";
+
+    // Endpoints reales
+    const API_STATE = `${API_PREFIX}/api/estado`;
+    const API_AUTOFILL = `${API_PREFIX}/api/autofill`;
+    console.log("Project ID:", projectId);
+    console.log(API_STATE, API_AUTOFILL);
+    // ======= State =======
+    let estado = null;
+    let original = null;
+    let activeIndex = 0;
+
+    // ======= Helpers =======
+    const $ = (id) => document.getElementById(id);
+    const deepClone = (v) => JSON.parse(JSON.stringify(v));
+    const setStatus = (text, kind="") => {
+      const el = $("status");
+      el.textContent = text;
+      el.className = "status" + (kind ? " " + kind : "");
+    };
+    const isDirty = () => JSON.stringify(estado) !== JSON.stringify(original);
+
+    function safeArray(v){ return Array.isArray(v) ? v : []; }
+    function activePrograma(){
+      if (!estado) return null;
+      const arr = safeArray(estado.informacion_programas_nacionales);
+      return arr[activeIndex] || null;
+    }
+
+    function renderTabs(){
+      const tabs = $("tabs");
+      tabs.innerHTML = "";
+      const arr = safeArray(estado?.informacion_programas_nacionales);
+
+      arr.forEach((p, i) => {
+        const btn = document.createElement("button");
+        btn.className = "tab" + (i === activeIndex ? " active" : "");
+        btn.onclick = () => { activeIndex = i; renderAll(); };
+
+        const name = p.Programa || `Programa ${i+1}`;
+        const snies = p.Snies || "—";
+        btn.innerHTML = `
+          <div class="t1">${escapeHtml(name)}</div>
+          <div class="t2">SNIES: ${escapeHtml(String(snies))}</div>
+        `;
+        tabs.appendChild(btn);
+      });
+    }
+
+    function renderContent(){
+      const cont = $("content");
+      const p = activePrograma();
+      if (!p) {
+        cont.style.display = "block";
+        cont.innerHTML = "<div>No hay programa seleccionado.</div>";
+        return;
+      }
+      cont.style.display = "block";
+
+      cont.innerHTML = `
+        <h2>${escapeHtml(p.Programa || "Programa")}</h2>
+
+        <div class="grid">
+          ${field("SNIES", input("Snies", p.Snies ?? ""))}
+          ${field("Programa", input("Programa", p.Programa ?? ""))}
+          ${field("Institución", input("Institucion", p.Institucion ?? ""))}
+          ${field("Municipio", input("Municipio", p.Municipio ?? ""))}
+          ${field("URL institución", input("URL", p.URL ?? ""))}
+          ${field("URL programa", input("URL_programa", p.URL_programa ?? ""))}
+          ${field("Acreditado", select("acreditado", p.acreditado ?? "No", ["No","Si"]))}
+          ${field("Modalidad", input("modalidad", p.modalidad ?? ""))}
+          ${field("Número de créditos", inputNumber("numero_creditos", p.numero_creditos ?? 0))}
+          ${field("Número de periodos", inputNumber("numero_periodo", p.numero_periodo ?? 0))}
+          ${field("Periodicidad", input("periodicidad", p.periodicidad ?? ""))}
+          ${field("Iteraciones", inputNumber("iteraciones", p.iteraciones ?? 0))}
+        </div>
+
+        <div style="margin-top:12px;">
+          ${field("Descripción", textarea("Descripcion", p.Descripcion ?? ""))}
+        </div>
+
+        <div style="margin-top:12px;">
+          ${field("Perfil", textarea("Perfil", p.Perfil ?? ""))}
+        </div>
+
+        
+        <h3>Plan de estudios</h3>
+        <div class="pill">Cada línea es un curso (se guarda como una entrada del arreglo).</div>
+        <textarea id="planText" style="min-height:220px;" placeholder="Ej:
+Anatomía
+Fisiología
+Bioética"></textarea>
+
+
+        <details>
+          <summary>Edición avanzada (queries + JSON completo del programa)</summary>
+
+          <h3>Queries (JSON)</h3>
+          <textarea id="queriesJson" style="min-height:140px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono;"></textarea>
+          <div class="row" style="margin-top:8px;">
+            <button id="btnApplyQueriesJson">Aplicar queries JSON</button>
+          </div>
+
+          <h3>Programa completo (JSON)</h3>
+          <textarea id="programJson" style="min-height:260px;font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, Liberation Mono;"></textarea>
+          <div class="row" style="margin-top:8px;">
+            <button id="btnApplyProgramJson">Aplicar programa JSON</button>
+          </div>
+        </details>
+      `;
+
+      wireUpForm();
+      renderAdvancedJson();
+    }
+
+
+    function renderAdvancedJson(){
+      const p = activePrograma();
+
+      // Plan de estudios: 1 línea = 1 curso (se guarda como array)
+      const planLines = safeArray(p.Plan_de_estudios).map(v => {
+        if (v === null || v === undefined) return "";
+        return (typeof v === "string") ? v : JSON.stringify(v);
+      });
+      $("planText").value = planLines.join("\n");
+
+      $("queriesJson").value = JSON.stringify(safeArray(p.queries), null, 2);
+      $("programJson").value = JSON.stringify(p, null, 2);
+    }
+
+    function wireUpForm(){
+      // Inputs directos
+      document.querySelectorAll("[data-field]").forEach(el => {
+        el.addEventListener("input", (e) => {
+          const field = el.getAttribute("data-field");
+          if (!field) return;
+          let value = e.target.value;
+
+          if (el.getAttribute("data-type") === "number") {
+            value = Number(value);
+            if (Number.isNaN(value)) value = 0;
+          }
+          updateField(field, value);
+          updateDirtyUI();
+        });
+      });
+
+
+
+      // Plan de estudios: cada línea = un curso
+      const planEl = $("planText");
+      if (planEl) {
+        planEl.addEventListener("input", () => {
+          const raw = planEl.value.replace(/\r\n/g, "\n");
+          const lines = raw.split("\n")
+            .map(s => s.trim())
+            .filter(s => s.length > 0);
+          updateField("Plan_de_estudios", lines);
+          updateDirtyUI();
+        });
+      }
+
+      
+      
+      $("btnApplyQueriesJson").onclick = () => {
+        try {
+          const parsed = JSON.parse($("queriesJson").value);
+          if (!Array.isArray(parsed)) throw new Error("queries debe ser un array");
+          updateField("queries", parsed);
+          setStatus("Queries aplicadas", "ok");
+          renderAll();
+        } catch (e) {
+          setStatus("JSON inválido (queries)", "err");
+        }
+      };
+
+      $("btnApplyProgramJson").onclick = () => {
+        try {
+          const parsed = JSON.parse($("programJson").value);
+          // reemplaza el programa completo
+          const arr = safeArray(estado.informacion_programas_nacionales);
+          arr[activeIndex] = parsed;
+          estado.informacion_programas_nacionales = arr;
+          setStatus("Programa aplicado", "ok");
+          renderAll();
+        } catch (e) {
+          setStatus("JSON inválido (programa)", "err");
+        }
+      };
+    }
+
+    function updateField(field, value){
+      const arr = safeArray(estado.informacion_programas_nacionales);
+      if (!arr[activeIndex]) return;
+      arr[activeIndex][field] = value;
+      estado.informacion_programas_nacionales = arr;
+    }
+
+    function updateDirtyUI(){
+      $("dirty").textContent = isDirty() ? "Cambios sin guardar" : "";
+      if (isDirty()) setStatus("Pendiente de guardar", "warn");
+      else setStatus("Listo", "");
+    }
+
+    function renderAll(){
+      renderTabs();
+      renderContent();
+      updateDirtyUI();
+    }
+
+    // ======= HTML builders =======
+    function escapeHtml(str){
+      return String(str)
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function field(labelText, inner){
+      return `<div><label>${escapeHtml(labelText)}</label>${inner}</div>`;
+    }
+    function input(fieldName, val){
+      return `<input data-field="${escapeHtml(fieldName)}" value="${escapeHtml(val)}" />`;
+    }
+    function inputNumber(fieldName, val){
+      return `<input data-type="number" type="number" data-field="${escapeHtml(fieldName)}" value="${escapeHtml(val)}" />`;
+    }
+    function textarea(fieldName, val){
+      return `<textarea data-field="${escapeHtml(fieldName)}">${escapeHtml(val)}</textarea>`;
+    }
+    function select(fieldName, val, options){
+      const opts = options.map(o => `<option value="${escapeHtml(o)}"${o===val ? " selected":""}>${escapeHtml(o)}</option>`).join("");
+      return `<select data-field="${escapeHtml(fieldName)}">${opts}</select>`;
+    }
+
+    // ======= API calls =======
+    async function loadState(){
+      setStatus("Cargando…", "");
+      const res = await fetch(API_STATE);
+      if (!res.ok) {
+        const t = await res.text().catch(()=> "");
+        throw new Error("No se pudo cargar /api/estado. " + t);
+      }
+      const data = await res.json();
+      if (!Array.isArray(data.informacion_programas_nacionales)) data.informacion_programas_nacionales = [];
+      estado = data;
+      original = deepClone(data);
+      activeIndex = 0;
+      setStatus("Listo", "ok");
+      renderAll();
+    }
+
+    async function saveState(){
+      if (!estado) return;
+      setStatus("Guardando…", "");
+      const res = await fetch(API_STATE, {
+        method: "PUT",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify(estado)
+      });
+      if (!res.ok) {
+        const t = await res.text().catch(()=> "");
+        throw new Error("Error guardando /api/estado. " + t);
+      }
+      original = deepClone(estado);
+      setStatus("Guardado", "ok");
+      updateDirtyUI();
+    }
+
+    async function autoFill(){
+      const p = activePrograma();
+      if (!p) return;
+      setStatus("Buscando…", "");
+      const res = await fetch(API_AUTOFILL, {
+        method: "POST",
+        headers: { "Content-Type":"application/json" },
+        body: JSON.stringify({ programaIndex: activeIndex, programa: p })
+      });
+      if (!res.ok) throw new Error("Autofill falló");
+      const data = await res.json();
+
+      if (!data.applied) {
+        setStatus("Sin cambios (autofill)", "warn");
+        return;
+      }
+      if (data.patch && typeof data.patch === "object") {
+        Object.assign(p, data.patch);
+        setStatus("Autofill aplicado", "ok");
+        renderAll();
+        return;
+      }
+      setStatus("Autofill respondió sin patch", "warn");
+    }
+
+    // ======= Wire top buttons =======
+    $("btnReload").onclick = () => loadState().catch(e => setStatus(e.message, "err"));
+    $("btnSave").onclick = () => saveState().catch(e => setStatus(e.message, "err"));
+    $("btnAutofill").onclick = () => autoFill().catch(e => setStatus(e.message, "err"));
+
+    // ======= Boot =======
+    loadState().catch(e => setStatus(e.message, "err"));
+  </script>
+</body>
+</html>

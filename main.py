@@ -88,6 +88,26 @@ def api_estado(project_id: str):
     print("No se encontró estado.json, ", d)
     return {"titulo": f"nombre {project_id}", "descripcion": "Inicial"}
 
+@app.put("/{project_id}/api/estado")
+def put_estado(project_id: str, payload: dict = Body(...)):
+    d = project_dir(project_id)
+    p = d / "estado.json"
+
+    try:
+        p.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2),
+            encoding="utf-8"
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"No se pudo escribir estado.json: {e}")
+
+    return JSONResponse({
+        "ok": True,
+        "path": str(p),
+        "programas": len(payload.get("informacion_programas_nacionales", []))
+    })
+
+
 # ✅ API por proyecto (la que ya tenías)
 @app.get("/{project_id}/api/seleccion")
 def api_seleccion(project_id: str):
@@ -140,4 +160,24 @@ def run_reporte(project_id: str):
         url=f"/{project_id}/files/reporte.html",
         status_code=302
     )
+from programa_autofill import autofill_programa
+import markdown 
+@app.post("/{project_id}/api/autofill")
+def post_programa_autofill(project_id: str, payload: dict = Body(...)):
+    try:
+        programa = payload.get("programa")
+        if not isinstance(programa, dict):
+            raise ValueError("Body inválido: se esperaba { programaIndex, programa }")
 
+        result = autofill_programa(project_id=project_id, programa=programa)
+
+        # opcional: re-incluir el index para que el front lo use
+        if "programaIndex" in payload:
+            result["programaIndex"] = payload["programaIndex"]
+
+        return JSONResponse(result)
+
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Fallo autofill: {e}")
